@@ -201,11 +201,11 @@ class PolicyValidator:
         else:
             concentration = 0.0
 
-        # Calculate risk score (higher = riskier)
-        risk_score = 1.0 - min(exposure_ratio, 1.0)
+        # Calculate risk score (higher exposure = higher risk)
+        risk_score = min(exposure_ratio, 1.0)
         concentration_risk = concentration / self.concentration_limit if self.concentration_limit > 0 else 0
 
-        # Combined risk assessment
+        # Combined risk assessment (higher = riskier)
         combined_risk = (risk_score * 0.6 + concentration_risk * 0.4)
         acceptable = combined_risk <= self.risk_threshold and concentration <= self.concentration_limit
 
