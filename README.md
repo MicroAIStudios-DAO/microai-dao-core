@@ -10,7 +10,7 @@
 
 MicroAI DAO is a unified monorepo consolidating multiple repositories into a single, deployable system for AI-governed decentralized organizations. It features:
 
-- **EXECAI**: AI stakeholder with 51% voting power
+- **EXECAI**: AI stakeholder with 33% voting power (balanced governance: 33% AI, 33% founders/team, 33% investors)
 - **EPI Framework**: Ethical Profitability Index for balanced decision-making
 - **Multi-Chain**: Solana (governance) + Ethereum (treasury/oracles)
 - **Wyoming DAO LLC**: Legal compliance for US jurisdictions
@@ -136,7 +136,7 @@ Autonomous voting agent with EPI-based decisions:
 ```python
 from src.personas import ExecAIVoter
 
-voter = ExecAIVoter(voting_power=0.51)
+voter = ExecAIVoter(voting_power=0.33)
 decision = voter.evaluate_proposal({
     'id': 'prop_001',
     'title': 'Infrastructure Upgrade',
@@ -226,7 +226,7 @@ compliance.create_entity(
     registered_agent_address="1621 Central Ave, Cheyenne, WY 82001",
     principal_place_of_business="Wyoming, USA"
 )
-compliance.add_ai_stakeholder("EXECAI", voting_power=0.51)
+compliance.add_ai_stakeholder("EXECAI", voting_power=0.33)
 
 status = compliance.validate_compliance()
 ```

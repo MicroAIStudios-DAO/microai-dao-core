@@ -5,7 +5,7 @@ Executive AI agents for governance and mentorship.
 
 Personas:
 - StrategicCatalyst: Executive mentor for founders
-- ExecAIVoter: Autonomous voting agent (51% stake)
+- ExecAIVoter: Autonomous voting agent (33% stake - balanced governance)
 - (Future) CEOAgent, CFOAgent, CTOAgent
 """
 

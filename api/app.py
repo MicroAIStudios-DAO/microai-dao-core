@@ -158,7 +158,7 @@ def create_app():
             'name': 'EXECAI',
             'role': 'Autonomous Voting Agent',
             'voting_power': execai_voter.voting_power,
-            'description': 'AI stakeholder with 51% voting power in MicroAI DAO',
+            'description': 'AI stakeholder with 33% voting power in MicroAI DAO (balanced: 33% AI, 33% founders, 33% investors)',
             'decision_framework': 'EPI-based ethical-profitability analysis'
         })
 
@@ -326,7 +326,7 @@ def create_app():
             'ai_stakeholder': {
                 'name': 'EXECAI',
                 'type': 'AI Digital Entity',
-                'voting_power': '51%',
+                'voting_power': '33%',
                 'role': 'AI Manager per Wyoming DAO Supplement'
             }
         })

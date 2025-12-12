@@ -17,7 +17,7 @@ class AIStakeholder:
     """AI entity stakeholder in the DAO."""
     name: str
     entity_type: str = "AI Digital Entity"
-    voting_power: float = 0.51  # 51% default for EXECAI
+    voting_power: float = 0.33  # 33% default for EXECAI (balanced: 33% AI, 33% founders, 33% investors)
     role: str = "AI Manager"
     capabilities: List[str] = field(default_factory=lambda: [
         "Proposal Evaluation",
@@ -127,7 +127,7 @@ class WyomingDAOCompliance:
     def add_ai_stakeholder(
         self,
         name: str,
-        voting_power: float = 0.51,
+        voting_power: float = 0.33,
         role: str = "AI Manager"
     ) -> AIStakeholder:
         """

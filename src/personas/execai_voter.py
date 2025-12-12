@@ -1,7 +1,8 @@
 """
 EXECAI Voter Persona
 ====================
-Autonomous voting agent with 51% stake in MicroAI DAO.
+Autonomous voting agent with 33% stake in MicroAI DAO.
+Balanced governance: 33% AI, 33% founders/team, 33% investors.
 
 Integrates:
 - EPI Calculator for ethical decision-making
@@ -71,7 +72,7 @@ class ExecAIVoter:
         self,
         epi_calculator: Optional[EPICalculator] = None,
         policy_validator: Optional[PolicyValidator] = None,
-        voting_power: float = 0.51
+        voting_power: float = 0.33
     ):
         """
         Initialize EXECAI Voter.
@@ -79,7 +80,7 @@ class ExecAIVoter:
         Args:
             epi_calculator: EPI calculator instance
             policy_validator: Policy validator instance
-            voting_power: EXECAI's voting power (default 51%)
+            voting_power: EXECAI's voting power (default 33%)
         """
         self.epi_calculator = epi_calculator or EPICalculator()
         self.policy_validator = policy_validator or PolicyValidator()
