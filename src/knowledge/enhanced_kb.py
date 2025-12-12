@@ -8,7 +8,6 @@ From: execai-platform-api
 
 from typing import List, Dict, Any, Optional
 from datetime import datetime
-import numpy as np
 
 try:
     from sklearn.feature_extraction.text import TfidfVectorizer

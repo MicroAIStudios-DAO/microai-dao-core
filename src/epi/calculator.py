@@ -11,9 +11,8 @@ Core Formula: EPI = H(P, E) × B(P, E) × T(V)
 """
 
 import numpy as np
-from typing import Tuple, List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
-from datetime import datetime
 
 # Mathematical constants
 PHI = (np.sqrt(5) - 1) / 2  # Golden ratio conjugate ≈ 0.618
