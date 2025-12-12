@@ -43,7 +43,7 @@ Entity Type: Wyoming DAO LLC
 Jurisdiction: Wyoming, USA
 Members: 2 active
 Proposals: 3 (2 active, 1 passed)
-AI Stakeholder: EXECAI Digital Entity (51% voting power)
+AI Stakeholder: EXECAI Digital Entity (33% voting power - balanced: 33% AI, 33% founders, 33% investors)
 
 📋 WYOMING LLC COMPLIANCE:
 ==========================

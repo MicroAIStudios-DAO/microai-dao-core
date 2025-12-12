@@ -1,123 +1,275 @@
-# MicroAI DAO LLC (Devnet)
+# MicroAI DAO - Unified AI-Governed DAO Platform
 
-A complete, production-grade Wyoming DAO LLC stack on Solana with:
+> **A production-ready, AI-governed Decentralized Autonomous Organization with Wyoming LLC compliance, multi-chain support, and ethical profitability enforcement.**
 
-- Governance & Membership smart contracts (Anchor)
-- React governance dashboard with live on-chain data
-- Live data sidecar (Node.js) for simplified account parsing
-- EXECAI (AI stakeholder) client that votes on proposals on-chain
-- Wyoming DAO LLC compliance fields persisted on-chain
+[![Solana](https://img.shields.io/badge/Solana-Devnet-blue)](https://solana.com)
+[![Ethereum](https://img.shields.io/badge/Ethereum-Sepolia-purple)](https://ethereum.org)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-This repo is structured to be easily duplicated for other companies with minimal changes.
+## Overview
+
+MicroAI DAO is a unified monorepo consolidating multiple repositories into a single, deployable system for AI-governed decentralized organizations. It features:
+
+- **EXECAI**: AI stakeholder with 33% voting power (balanced governance: 33% AI, 33% founders/team, 33% investors)
+- **EPI Framework**: Ethical Profitability Index for balanced decision-making
+- **Multi-Chain**: Solana (governance) + Ethereum (treasury/oracles)
+- **Wyoming DAO LLC**: Legal compliance for US jurisdictions
+- **Strategic Catalyst**: AI executive mentor for founders
 
 ## Repository Structure
 
-- programs/
-  - governance/ … Anchor program with Wyoming compliance fields (Dao + Proposal + VoteRecord)
-  - membership/ … Anchor program with Member registry (includes KYC/compliance fields)
-- microai-dashboard/ … React + Vite dashboard
-- scripts/
-  - seed_raw.js … Seeds a DAO + one Proposal on devnet via raw instructions
-  - vote_raw.js … Casts a vote on a proposal (approve/reject)
-- live-data-server.js … Serves clean JSON from on-chain accounts at http://localhost:8787
-- execai_client.py … AI stakeholder client that evaluates and votes on proposals
-- Anchor.toml … Anchor configuration with devnet program IDs
-- config.json … Runtime configuration for EXECAI & RPC
-
-## Quick Start (Devnet)
-
-1) Prerequisites
-- Node.js 20+, npm
-- Rust toolchain, Solana CLI, Anchor
-- Python 3.13+
-
-2) Install dependencies (persistent, no virtualenv)
-
 ```
+microai-dao/
+├── contracts/                 # Smart Contracts
+│   ├── solana/               # Anchor programs (deployed)
+│   │   ├── governance/       # Voting, proposals, DAO state
+│   │   └── membership/       # Member registry, KYC fields
+│   └── ethereum/             # Solidity contracts
+│       ├── Governance.sol    # EPI-enforced governance
+│       └── EPIOracle.sol     # On-chain EPI scores
+│
+├── src/                       # Core Python Modules
+│   ├── epi/                  # EPI Calculator
+│   │   ├── calculator.py     # Harmonic mean, golden ratio balance
+│   │   └── trust_accumulator.py # Geometric trust decay
+│   ├── policy_engine/        # Compliance validation
+│   │   └── validator.py      # Sanctions, risk, EPI checks
+│   ├── knowledge/            # Knowledge base
+│   │   └── enhanced_kb.py    # TF-IDF semantic search
+│   ├── personas/             # AI Agents
+│   │   ├── strategic_catalyst.py  # Executive mentor
+│   │   └── execai_voter.py   # Autonomous voting agent
+│   └── compliance/           # Wyoming DAO LLC
+│       └── wyoming_dao.py    # Legal compliance utilities
+│
+├── api/                       # Unified Flask Backend
+│   └── app.py                # REST API endpoints
+│
+├── microai-dashboard/         # React Dashboard
+│   └── src/                  # Governance UI, charts, compliance
+│
+├── services/
+│   └── live-data-server/     # Solana account parser
+│
+├── automation/               # Revenue systems
+├── docker/                   # Docker configs
+├── scripts/                  # Deployment scripts
+└── docs/                     # Documentation
+```
+
+## Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- Python 3.11+
+- Rust (for Solana development)
+- Solana CLI
+- Docker (optional)
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/Gnoscenti/microai-dao.git
+cd microai-dao
+
+# Install dependencies
 make install
+
+# Or manually:
+pip install -r requirements.txt
+cd microai-dashboard && npm install
 ```
 
-3) Build smart contracts & dashboard (optional)
-```
-make build
+### Running Services
+
+```bash
+# Start all services (recommended)
+make dev-all
+
+# Or individually:
+make api         # Flask API (port 5000)
+make live-data   # Solana data server (port 8787)
+make dev         # React dashboard (port 5173)
 ```
 
-4) Deploy programs to devnet (already deployed in this template)
-- Governance: 6amHFyNoPK9MmbBKqthLMeoxTB4TV7CdVE5K4RXi1eDC
-- Membership: FotEuL6PaHRDYuDmtqNrbbS52AwVX49MQSBjNwCWqRA4
+### Docker Deployment
 
-If you need to redeploy:
-```
-anchor deploy --program-name governance
-anchor deploy --program-name membership
-```
+```bash
+make docker-build
+make docker-up
 
-5) Seed a DAO and a Proposal on devnet
-```
-npm run seed:dao
+# View logs
+make docker-logs
+
+# Stop services
+make docker-down
 ```
 
-6) Start the live data API server (parses on-chain accounts)
-```
-npm run live-data
-# Health check
-curl -s http://localhost:8787/health
+## Core Components
+
+### 1. EPI Calculator
+
+The Ethical Profitability Index ensures balanced decision-making:
+
+```python
+from src.epi import EPICalculator, EPIScores
+
+calculator = EPICalculator(threshold=0.7)
+scores = EPIScores(profit=0.8, ethics=0.75, violations=[])
+result = calculator.compute_epi(scores)
+
+print(f"EPI Score: {result.epi_score}")
+print(f"Recommendation: {result.recommendation}")
 ```
 
-7) Start the dashboard (Vite dev server)
-```
-cd microai-dashboard && npm run dev
-# Open the printed URL (e.g., http://localhost:5176)
+**Formula**: `EPI = H(P, E) × B(P, E) × T(V)`
+- H: Harmonic mean (non-compensatory)
+- B: Golden ratio balance penalty
+- T: Trust decay from violations
+
+### 2. EXECAI Voter
+
+Autonomous voting agent with EPI-based decisions:
+
+```python
+from src.personas import ExecAIVoter
+
+voter = ExecAIVoter(voting_power=0.33)
+decision = voter.evaluate_proposal({
+    'id': 'prop_001',
+    'title': 'Infrastructure Upgrade',
+    'amount': 5000,
+    'ethics_scores': {'transparency': 0.9, 'sustainability': 0.8}
+})
+
+print(f"Vote: {decision.vote}")
+print(f"Confidence: {decision.confidence}")
 ```
 
-8) Run EXECAI (AI stakeholder) to vote on-chain
+### 3. Strategic Catalyst
+
+Executive mentor for founders:
+
+```python
+from src.personas import StrategicCatalyst
+
+mentor = StrategicCatalyst()
+response = mentor.respond("How should I approach fundraising?")
+
+print(response['content'])
+print(f"Next Step: {response['next_step']}")
 ```
-# Update config.json if needed (keypair and RPC)
-/usr/bin/python3 execai_client.py
+
+### 4. Policy Validator
+
+Multi-factor compliance validation:
+
+```python
+from src.policy_engine import PolicyValidator
+
+validator = PolicyValidator(epi_threshold=0.7)
+result = validator.validate_intent({
+    'action': 'investment',
+    'amount': 50000,
+    'ethics_scores': {'transparency': 0.8, 'compliance': 0.9},
+    'profitability': 0.75
+})
+
+print(f"Status: {result.status}")
+print(f"Recommendations: {result.recommendations}")
 ```
 
-9) Manually cast votes (optional)
-```
-# Approve
-npm run vote -- D7D3EC2CKrquXnfJPRdGR2dvo3sfAZ6YqFmQiXkuUknr approve
-# Reject
-npm run vote -- <PROPOSAL_PUBKEY> reject
-```
+## API Endpoints
 
-## Configuration
+The unified Flask API provides:
 
-- Anchor.toml
-  - [programs.devnet] has program IDs for governance & membership
-  - [provider] uses ~/.config/solana/id.json
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/health` | GET | Health check |
+| `/api/knowledge/query` | POST | Query knowledge base |
+| `/api/personas/strategic-catalyst/respond` | POST | Get mentor response |
+| `/api/personas/execai/evaluate` | POST | Evaluate proposal |
+| `/api/epi/calculate` | POST | Calculate EPI score |
+| `/api/compliance/validate` | POST | Validate intent |
+| `/api/compliance/wyoming/status` | GET | Wyoming LLC status |
 
-- config.json
-  - governance_program_id, membership_program_id
-  - keypair_path (EXECAI signer)
-  - rpc_url (default: https://api.devnet.solana.com)
+## Smart Contracts
 
-- microai-dashboard/src/lib/config.ts
-  - Defaults to devnet, can switch to mainnet via env vars
+### Solana (Deployed to Devnet)
+
+- **Governance**: `6amHFyNoPK9MmbBKqthLMeoxTB4TV7CdVE5K4RXi1eDC`
+- **Membership**: `FotEuL6PaHRDYuDmtqNrbbS52AwVX49MQSBjNwCWqRA4`
+
+### Ethereum (Ready for Deployment)
+
+- `Governance.sol`: EPI-enforced voting with guardian veto
+- `EPIOracle.sol`: On-chain EPI score verification
 
 ## Wyoming DAO LLC Compliance
 
-Compliance fields are stored directly on-chain in the Dao account:
-- legal_name, registered_agent_address, principal_place_of_business
-- formation_date, jurisdiction ("Wyoming"), entity_type ("DAO LLC")
+MicroAI DAO is structured as a Wyoming DAO LLC with:
 
-The dashboard Wyoming tab includes an auto-fill JSON loader to streamline filings.
+- **Legal Entity**: Recognized under Wyoming DAO Supplement
+- **AI Manager**: EXECAI registered as AI manager with voting rights
+- **Smart Contract Governance**: On-chain voting and treasury management
+- **Member Registry**: KYC-compatible member management
 
-## Duplicating for Other Companies
+```python
+from src.compliance import WyomingDAOCompliance
 
-1) Clone this repository
-2) Change legal & registered agent details in:
-   - scripts/seed_raw.js (initialize args)
-   - wyoming-dao-config.json
-3) Redeploy programs under your authority (optional) and update Anchor.toml & config.json
-4) Run seed, live data server, dashboard, and EXECAI as above
+compliance = WyomingDAOCompliance()
+compliance.create_entity(
+    legal_name="MicroAI DAO LLC",
+    registered_agent_name="Wyoming Agents",
+    registered_agent_address="1621 Central Ave, Cheyenne, WY 82001",
+    principal_place_of_business="Wyoming, USA"
+)
+compliance.add_ai_stakeholder("EXECAI", voting_power=0.33)
+
+status = compliance.validate_compliance()
+```
+
+## Consolidated Repositories
+
+This monorepo consolidates:
+
+| Original Repo | Purpose | Merged Into |
+|---------------|---------|-------------|
+| `EPI-governance` | EPI calculator, policy engine | `src/epi/`, `src/policy_engine/` |
+| `execai-platform-api` | Flask API, knowledge base | `api/`, `src/knowledge/` |
+| `mobile-execai` | Executive mentoring | `src/personas/` |
+| `microaistudios-frontend` | Landing page | Reference for `microai-dashboard/` |
+
+## Development
+
+```bash
+# Run tests
+make test-python
+
+# Lint code
+make lint
+
+# Format code
+make format
+
+# Build contracts
+make contracts
+make contracts-eth
+```
+
+## Deployment Tiers
+
+| Tier | Description | Infrastructure |
+|------|-------------|----------------|
+| **Lite** | Cloud-hosted, managed | Vercel + Render + Devnet |
+| **Enterprise** | Self-hosted, GPU-enabled | Docker + Mainnet |
+| **Sovereign** | Air-gapped, full control | On-prem + Private nodes |
 
 ## Mainnet Readiness Checklist
 
-See docs/MAINNET_CHECKLIST.md for a step-by-step guide:
+See `docs/MAINNET_CHECKLIST.md` for a step-by-step guide:
 - Program deployment on mainnet-beta
 - Update Anchor.toml [programs.mainnet]
 - Lock IDL & publish (optional)
@@ -126,11 +278,28 @@ See docs/MAINNET_CHECKLIST.md for a step-by-step guide:
 
 ## Security Notes
 
-- Keys in ~/.config/solana/*.json — back them up securely.
-- This repository avoids virtual environments for Python to maintain persistent environments.
-- Use separate keys & wallets for mainnet.
+- Keys in ~/.config/solana/*.json — back them up securely
+- Use separate keys & wallets for mainnet
+- Review smart contract audits before mainnet deployment
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make changes with tests
+4. Submit a pull request
 
 ## License
 
-UNLICENSED – consult your legal counsel for compliance requirements.
+MIT License - See [LICENSE](LICENSE) for details.
 
+## Links
+
+- [Documentation](docs/)
+- [Wyoming DAO Compliance](docs/WYOMING_COMPLIANCE.md)
+- [Mainnet Checklist](docs/MAINNET_CHECKLIST.md)
+- [Development Setup](docs/DEV_SETUP.md)
+
+---
+
+**MicroAI DAO** - *Ethical AI Governance for the Decentralized Future*

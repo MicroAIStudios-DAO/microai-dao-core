@@ -1,0 +1,61 @@
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "microai-dao"
+version = "1.0.0"
+description = "MicroAI DAO - Unified AI-Governed DAO Platform"
+authors = ["MicroAI Studios"]
+readme = "README.md"
+license = "MIT"
+packages = [
+    { include = "src" },
+    { include = "api" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+flask = "^3.0.0"
+flask-cors = "^4.0.0"
+gunicorn = "^21.0.0"
+python-dotenv = "^1.0.0"
+numpy = "^1.24.0"
+pandas = "^2.0.0"
+scikit-learn = "^1.3.0"
+scipy = "^1.11.0"
+solana = "^0.30.0"
+solders = "^0.18.0"
+anchorpy = "^0.18.0"
+aiohttp = "^3.9.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+pytest-asyncio = "^0.21.0"
+mypy = "^1.5.0"
+black = "^23.0.0"
+isort = "^5.12.0"
+flake8 = "^6.1.0"
+
+[tool.poetry.scripts]
+api = "api.app:main"
+execai = "src.personas.execai_client:main"
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

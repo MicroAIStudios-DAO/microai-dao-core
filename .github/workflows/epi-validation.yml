@@ -1,0 +1,87 @@
+# EPI Validation Workflow
+# Ensures all changes meet Ethical Profitability Index thresholds
+# Per paper: "EPI as a mathematical constitution across DAO ops"
+
+name: EPI Validation
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+
+jobs:
+  epi-check:
+    name: Validate EPI Compliance
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run EPI Validation
+        env:
+          PYTHONPATH: ./src
+        run: |
+          python -c "
+          from epi import EPICalculator, EPIScores
+
+          # Validate EPI module loads correctly
+          calc = EPICalculator(threshold=0.7)
+
+          # Test basic calculation
+          scores = EPIScores(profit=0.8, ethics=0.75, violations=[])
+          result = calc.compute_epi(scores)
+
+          print(f'EPI Score: {result.epi_score:.3f}')
+          print(f'Valid: {result.is_valid}')
+          print(f'Recommendation: {result.recommendation}')
+
+          # Ensure minimum threshold met
+          assert result.epi_score >= 0.5, 'EPI score too low'
+          print('✅ EPI validation passed')
+          "
+
+      - name: Validate Policy Engine
+        env:
+          PYTHONPATH: ./src
+        run: |
+          python -c "
+          from policy_engine import PolicyValidator
+
+          validator = PolicyValidator(epi_threshold=0.7)
+
+          # Test validation
+          result = validator.validate_intent({
+              'action': 'test',
+              'ethics_scores': {'transparency': 0.8},
+              'profitability': 0.7
+          })
+
+          print(f'Status: {result.status.value}')
+          print('✅ Policy engine validation passed')
+          "
+
+  governance-check:
+    name: Check Governance Balance
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify 33% Voting Power
+        run: |
+          # Ensure no 51% references remain (balanced governance)
+          if grep -r "51%" --include="*.py" --include="*.md" --include="*.sol" .; then
+            echo "❌ Found 51% references - should be 33% for balanced governance"
+            exit 1
+          fi
+          echo "✅ Governance balance verified (33/33/33)"

@@ -1433,7 +1433,7 @@ Revolutionary dual-quorum AI-human governance system built on Solana.
 
 ## Overview
 
-EXECAI DAO implements the world's first legal framework where artificial intelligence has actual stakeholder rights and participates in governance alongside humans. The system requires 51% consensus from both human and AI voters for proposals to pass.
+EXECAI DAO implements the world's first legal framework where artificial intelligence has actual stakeholder rights and participates in governance alongside humans. The system features balanced governance with 33% AI voting power, 33% founders/team, and 33% investors - ensuring no single party has controlling interest while still giving AI unprecedented participation in business decisions.
 
 ## Features
 
