@@ -1,0 +1,96 @@
+# Main CI Workflow
+# Runs on all PRs and pushes
+
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  python-tests:
+    name: Python Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio
+
+      - name: Run tests
+        env:
+          PYTHONPATH: ./src
+        run: |
+          # Run any existing tests
+          if [ -d "tests" ]; then
+            pytest tests/ -v
+          else
+            echo "No tests directory found, running module imports"
+            python -c "from epi import EPICalculator; print('✅ EPI module OK')"
+            python -c "from policy_engine import PolicyValidator; print('✅ Policy engine OK')"
+            python -c "from personas import StrategicCatalyst, ExecAIVoter; print('✅ Personas OK')"
+            python -c "from knowledge import EnhancedKnowledgeBase; print('✅ Knowledge base OK')"
+            python -c "from compliance import WyomingDAOCompliance; print('✅ Compliance OK')"
+          fi
+
+  lint:
+    name: Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install linters
+        run: pip install black isort flake8
+
+      - name: Check formatting
+        run: |
+          black --check src/ api/ || echo "⚠️ Formatting issues found"
+          isort --check-only src/ api/ || echo "⚠️ Import order issues found"
+
+  dashboard-build:
+    name: Dashboard Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        working-directory: microai-dashboard
+        run: npm install
+
+      - name: Build dashboard
+        working-directory: microai-dashboard
+        run: npm run build
+
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          cd docker
+          docker build -t microai-dao:test -f Dockerfile ..

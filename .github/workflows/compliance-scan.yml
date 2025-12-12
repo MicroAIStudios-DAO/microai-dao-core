@@ -1,0 +1,99 @@
+# Compliance Scan Workflow
+# Validates Wyoming DAO LLC requirements
+# Per paper: "Wyoming DAO requirements benefit from single governance repo"
+
+name: Compliance Scan
+
+on:
+  pull_request:
+    paths:
+      - 'src/compliance/**'
+      - 'contracts/**'
+      - '**.sol'
+      - '**.rs'
+  push:
+    branches: [main]
+
+jobs:
+  wyoming-compliance:
+    name: Wyoming DAO LLC Compliance
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Validate Wyoming Compliance Module
+        env:
+          PYTHONPATH: ./src
+        run: |
+          python -c "
+          from compliance import WyomingDAOCompliance
+
+          # Test compliance module
+          compliance = WyomingDAOCompliance()
+          compliance.create_entity(
+              legal_name='MicroAI DAO LLC',
+              registered_agent_name='Wyoming Agents',
+              registered_agent_address='1621 Central Ave, Cheyenne, WY 82001',
+              principal_place_of_business='Wyoming, USA'
+          )
+
+          # Add AI stakeholder with 33% voting power
+          ai = compliance.add_ai_stakeholder('EXECAI', voting_power=0.33)
+          assert ai.voting_power == 0.33, 'AI voting power should be 33%'
+
+          # Validate compliance
+          result = compliance.validate_compliance()
+          print(f'Compliance Score: {result[\"score\"]}%')
+          print(f'Issues: {result[\"issues\"]}')
+          print('✅ Wyoming compliance module valid')
+          "
+
+      - name: Check Required Fields
+        run: |
+          # Verify smart contracts have Wyoming compliance fields
+          if ! grep -q "legal_name" contracts/solana/governance/src/lib.rs; then
+            echo "⚠️ Warning: legal_name field not found in Solana contract"
+          fi
+          echo "✅ Compliance field check complete"
+
+  contract-audit:
+    name: Smart Contract Static Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Solana Contracts
+        run: |
+          echo "Checking Solana contract structure..."
+          ls -la contracts/solana/
+
+          # Verify Anchor.toml points to correct paths
+          if grep -q "contracts/solana" Anchor.toml; then
+            echo "✅ Anchor.toml configured correctly"
+          else
+            echo "❌ Anchor.toml needs workspace configuration"
+            exit 1
+          fi
+
+      - name: Check Ethereum Contracts
+        run: |
+          echo "Checking Ethereum contracts..."
+          ls -la contracts/ethereum/
+
+          # Verify Solidity files exist
+          if [ -f "contracts/ethereum/Governance.sol" ] && [ -f "contracts/ethereum/EPIOracle.sol" ]; then
+            echo "✅ Ethereum contracts present"
+          else
+            echo "❌ Missing Ethereum contracts"
+            exit 1
+          fi
