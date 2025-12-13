@@ -17,7 +17,7 @@ from datetime import datetime
 from dataclasses import dataclass
 
 from ..epi import EPICalculator, EPIScores
-from ..policy_engine import PolicyValidator, ValidationStatus
+from ..policy_engine import PolicyValidator, ValidationResult, ValidationStatus
 
 logger = logging.getLogger(__name__)
 
@@ -118,6 +118,12 @@ class ExecAIVoter:
         # Check for automatic rules
         auto_decision = self._check_automatic_rules(proposal, category)
         if auto_decision:
+            self._log_thought(f"Auto-decision for {proposal_id}: {auto_decision.vote}", {
+                'epi_score': auto_decision.epi_score,
+                'confidence': auto_decision.confidence,
+                'reasoning': auto_decision.reasoning
+            })
+            self.vote_history.append(auto_decision)
             return auto_decision
 
         # Run full evaluation

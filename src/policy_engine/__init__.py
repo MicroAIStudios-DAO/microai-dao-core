@@ -10,6 +10,6 @@ Features:
 - Regulatory compliance checks
 """
 
-from .validator import PolicyValidator, ValidationResult
+from .validator import PolicyValidator, ValidationResult, ValidationStatus
 
-__all__ = ['PolicyValidator', 'ValidationResult']
+__all__ = ['PolicyValidator', 'ValidationResult', 'ValidationStatus']
