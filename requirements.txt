@@ -38,3 +38,18 @@ mypy>=1.5.0
 black>=23.0.0
 isort>=5.12.0
 flake8>=6.1.0
+
+# Trust Stack Dependencies
+cryptography>=41.0.0
+hashlib  # built-in
+json  # built-in
+uuid  # built-in
+
+# AI/LLM Integration
+transformers>=4.35.0
+torch>=2.1.0
+sentencepiece>=0.1.99
+accelerate>=0.24.0
+
+# Optional: Hugging Face Hub
+huggingface-hub>=0.19.0

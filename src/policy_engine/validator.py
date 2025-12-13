@@ -16,6 +16,7 @@ from datetime import datetime
 from enum import Enum
 
 from ..epi import EPICalculator, EPIScores
+from ..trust_stack import EventLogger
 
 
 class ValidationStatus(Enum):
@@ -82,6 +83,7 @@ class PolicyValidator:
         self.risk_threshold = risk_threshold
         self.concentration_limit = concentration_limit
         self.sanctioned_entities = sanctioned_entities or self.DEFAULT_SANCTIONED_ENTITIES
+        self.event_logger = EventLogger()  # Trust Stack integration
 
     def validate_intent(self, intent: Dict[str, Any]) -> ValidationResult:
         """

@@ -25,6 +25,7 @@ from knowledge import EnhancedKnowledgeBase
 from personas import StrategicCatalyst, ExecAIVoter
 from epi import EPICalculator, EPIScores
 from policy_engine import PolicyValidator
+from trust_stack import EventLogger, MerkleTree, AttestationGenerator, ProofVerifier, DailyMerkleAnchor
 
 
 def create_app():
@@ -38,6 +39,10 @@ def create_app():
     execai_voter = ExecAIVoter()
     epi_calculator = EPICalculator()
     policy_validator = PolicyValidator()
+    event_logger = EventLogger()
+    attestation_gen = AttestationGenerator()
+    proof_verifier = ProofVerifier()
+    merkle_anchor = DailyMerkleAnchor()
 
     # ===================
     # Health & Info
@@ -55,7 +60,8 @@ def create_app():
                 'strategic_catalyst': 'active',
                 'execai_voter': 'active',
                 'epi_calculator': 'active',
-                'policy_validator': 'active'
+                'policy_validator': 'active',
+                'trust_stack': 'active'
             }
         })
 
@@ -72,7 +78,8 @@ def create_app():
                 'personas': '/api/personas/*',
                 'governance': '/api/governance/*',
                 'compliance': '/api/compliance/*',
-                'epi': '/api/epi/*'
+                'epi': '/api/epi/*',
+                'trust': '/api/trust/*'
             }
         })
 
@@ -329,6 +336,264 @@ def create_app():
                 'voting_power': '33%',
                 'role': 'AI Manager per Wyoming DAO Supplement'
             }
+        })
+
+    # ===================
+    # Trust Stack
+    # ===================
+
+    @app.route('/api/trust/log', methods=['POST'])
+    def log_trust_event():
+        """Log a trust event with cryptographic signature."""
+        data = request.get_json() or {}
+
+        required = ['tenant_id', 'agent_id', 'action_type', 'input_data', 'output_data', 'policy_version']
+        for field in required:
+            if field not in data:
+                return jsonify({'error': f'{field} is required'}), 400
+
+        try:
+            event = event_logger.log_event(
+                tenant_id=data['tenant_id'],
+                agent_id=data['agent_id'],
+                action_type=data['action_type'],
+                input_data=data['input_data'],
+                output_data=data['output_data'],
+                policy_version=data['policy_version'],
+                epi_score=data.get('epi_score'),
+                model=data.get('model'),
+                tools_called=data.get('tools_called'),
+                redactions=data.get('redactions'),
+                evaluations=data.get('evaluations')
+            )
+
+            return jsonify({
+                'success': True,
+                'event': event.to_dict(),
+                'message': 'Event logged successfully'
+            })
+
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/trust/event/<event_id>', methods=['GET'])
+    def get_trust_event(event_id):
+        """Retrieve a trust event by ID."""
+        event = event_logger.get_event(event_id)
+
+        if event:
+            return jsonify({
+                'success': True,
+                'event': event.to_dict()
+            })
+        else:
+            return jsonify({'error': 'Event not found'}), 404
+
+    @app.route('/api/trust/events/agent/<agent_id>', methods=['GET'])
+    def get_agent_events(agent_id):
+        """Get recent events for a specific agent."""
+        limit = request.args.get('limit', 100, type=int)
+        events = event_logger.get_events_by_agent(agent_id, limit=limit)
+
+        return jsonify({
+            'success': True,
+            'agent_id': agent_id,
+            'count': len(events),
+            'events': [e.to_dict() for e in events]
+        })
+
+    @app.route('/api/trust/events/date/<date>', methods=['GET'])
+    def get_events_by_date(date):
+        """Get all events for a specific date (YYYY-MM-DD)."""
+        events = event_logger.get_events_by_date(date)
+
+        return jsonify({
+            'success': True,
+            'date': date,
+            'count': len(events),
+            'events': [e.to_dict() for e in events]
+        })
+
+    @app.route('/api/trust/prove/<event_id>', methods=['GET'])
+    def prove_event(event_id):
+        """Generate Merkle proof for an event."""
+        event = event_logger.get_event(event_id)
+
+        if not event:
+            return jsonify({'error': 'Event not found'}), 404
+
+        # Get date from event
+        date = event.timestamp[:10]
+
+        # Get all hashes for that day
+        event_hashes = event_logger.get_daily_hashes(date)
+
+        if not event_hashes:
+            return jsonify({'error': 'No events found for that date'}), 404
+
+        # Build Merkle tree
+        tree = MerkleTree(event_hashes)
+
+        # Get event hash
+        event_hash = event_logger.hash_data(event.input_hash + event.output_hash)
+
+        # Generate proof
+        proof = tree.get_proof(event_hash)
+
+        if proof:
+            return jsonify({
+                'success': True,
+                'event_id': event_id,
+                'proof': proof.to_dict(),
+                'tree_info': tree.get_tree_info()
+            })
+        else:
+            return jsonify({'error': 'Could not generate proof'}), 500
+
+    @app.route('/api/trust/verify/event', methods=['POST'])
+    def verify_event():
+        """Verify an event signature."""
+        data = request.get_json() or {}
+
+        if 'event' not in data:
+            return jsonify({'error': 'Event data is required'}), 400
+
+        try:
+            from trust_stack.event_logger import TrustEvent
+            event = TrustEvent(**data['event'])
+            result = proof_verifier.verify_event_signature(event)
+
+            return jsonify(result.to_dict())
+
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/trust/verify/proof', methods=['POST'])
+    def verify_proof():
+        """Verify a Merkle proof."""
+        data = request.get_json() or {}
+
+        if 'proof' not in data:
+            return jsonify({'error': 'Proof data is required'}), 400
+
+        try:
+            from trust_stack.merkle_tree import MerkleProof
+            proof = MerkleProof(**data['proof'])
+            result = proof_verifier.verify_merkle_proof(proof)
+
+            return jsonify(result.to_dict())
+
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/trust/anchor/daily/<date>', methods=['POST'])
+    def anchor_daily_root(date):
+        """Generate and anchor daily Merkle root."""
+        event_hashes = event_logger.get_daily_hashes(date)
+
+        if not event_hashes:
+            return jsonify({'error': 'No events found for that date'}), 404
+
+        root = merkle_anchor.generate_daily_root(date, event_hashes)
+        anchor_tx = merkle_anchor.prepare_anchor_transaction(date, root)
+
+        return jsonify({
+            'success': True,
+            'date': date,
+            'event_count': len(event_hashes),
+            'merkle_root': root,
+            'anchor_transaction': anchor_tx
+        })
+
+    @app.route('/api/trust/attestation/generate', methods=['POST'])
+    def generate_attestation():
+        """Generate an attestation bundle for a release."""
+        data = request.get_json() or {}
+
+        required = ['release_id', 'log_root', 'policy_version']
+        for field in required:
+            if field not in data:
+                return jsonify({'error': f'{field} is required'}), 400
+
+        try:
+            # Generate model card
+            model_card = attestation_gen.generate_model_card(
+                model_name=data.get('model_name', 'MicroAI-DAO'),
+                model_version=data['release_id'],
+                description=data.get('description', 'AI governance system'),
+                intended_use=data.get('intended_use', 'DAO governance and decision-making'),
+                limitations=data.get('limitations', 'Requires guardian oversight'),
+                training_data=data.get('training_data', 'Business strategy corpus'),
+                performance_metrics=data.get('performance_metrics', {})
+            )
+
+            # Generate SBOM
+            sbom = attestation_gen.generate_sbom(
+                components=data.get('components', []),
+                format=data.get('sbom_format', 'SPDX')
+            )
+
+            # Compile eval summary
+            eval_summary = attestation_gen.compile_eval_summary(
+                total_requests=data.get('total_requests', 0),
+                evaluated_requests=data.get('evaluated_requests', 0),
+                passed_requests=data.get('passed_requests', 0),
+                category_results=data.get('category_results', {}),
+                last_red_team_date=data.get('last_red_team_date', datetime.now().strftime('%Y-%m-%d'))
+            )
+
+            # Generate attestation
+            attestation = attestation_gen.generate_attestation(
+                release_id=data['release_id'],
+                model_card=model_card,
+                sbom=sbom,
+                eval_summary=eval_summary,
+                log_root=data['log_root'],
+                policy_version=data['policy_version'],
+                compliance_frameworks=data.get('compliance_frameworks'),
+                metadata=data.get('metadata')
+            )
+
+            return jsonify({
+                'success': True,
+                'attestation': attestation.to_dict(),
+                'message': 'Attestation generated successfully'
+            })
+
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/trust/status', methods=['GET'])
+    def trust_status():
+        """Get overall trust system status."""
+        # Get today's date
+        today = datetime.now().strftime('%Y-%m-%d')
+        events_today = event_logger.get_events_by_date(today)
+
+        # Calculate stats
+        agent_stats = {}
+        epi_scores = []
+
+        for event in events_today:
+            if event.agent_id not in agent_stats:
+                agent_stats[event.agent_id] = {'count': 0, 'actions': []}
+            agent_stats[event.agent_id]['count'] += 1
+            agent_stats[event.agent_id]['actions'].append(event.action_type)
+
+            if event.epi_score is not None:
+                epi_scores.append(event.epi_score)
+
+        avg_epi = sum(epi_scores) / len(epi_scores) if epi_scores else 0
+
+        return jsonify({
+            'success': True,
+            'status': 'operational',
+            'date': today,
+            'events_today': len(events_today),
+            'agent_activity': agent_stats,
+            'average_epi_score': round(avg_epi, 3),
+            'trust_badge': 'Bronze' if len(events_today) > 0 else 'None',
+            'last_anchor': merkle_anchor.get_root_for_date(today)
         })
 
     return app
