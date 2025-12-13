@@ -74,7 +74,15 @@ class EventLogger:
             signing_key: Secret key for HMAC signing (from env if not provided)
             storage_path: Path to store event logs (default: ./logs/trust_events/)
         """
-        self.signing_key = signing_key or os.getenv('TRUST_SIGNING_KEY', 'default-dev-key-change-in-prod')
+        # CRITICAL: Signing key MUST be provided - no defaults allowed
+        self.signing_key = signing_key or os.getenv('TRUST_SIGNING_KEY')
+        if not self.signing_key:
+            raise ValueError(
+                "TRUST_SIGNING_KEY must be set - no default allowed. "
+                "Generate with: python -c 'import secrets; print(secrets.token_urlsafe(32))'"
+            )
+        if self.signing_key == 'default-dev-key-change-in-prod':
+            raise ValueError("Default signing key detected - must use secure key")
         self.storage_path = Path(storage_path or './logs/trust_events')
         self.storage_path.mkdir(parents=True, exist_ok=True)
     

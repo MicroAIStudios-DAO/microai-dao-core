@@ -8,6 +8,7 @@ Implements role-based access control (RBAC).
 
 from functools import wraps
 from flask import request, jsonify
+import os
 from flask_jwt_extended import (
     JWTManager,
     create_access_token,
@@ -17,13 +18,19 @@ from flask_jwt_extended import (
     verify_jwt_in_request
 )
 from datetime import timedelta
-from typing import List, Optional
+from typing import List, Optional, Dict
 import secrets
 import bcrypt
 
 
 # JWT Configuration
-JWT_SECRET_KEY = secrets.token_urlsafe(32)  # Generate secure key
+# CRITICAL: JWT secret MUST be persistent across restarts
+JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
+if not JWT_SECRET_KEY:
+    raise ValueError(
+        "JWT_SECRET_KEY environment variable must be set. "
+        "Generate with: python -c 'import secrets; print(secrets.token_urlsafe(32))'"
+    )
 JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
 JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
 
@@ -38,9 +45,12 @@ def init_jwt(app):
     return jwt
 
 
+# bcrypt Configuration
+BCRYPT_ROUNDS = int(os.getenv('BCRYPT_ROUNDS', '12'))  # 12-14 recommended for production
+
 def hash_password(password: str) -> str:
-    """Hash password using bcrypt."""
-    salt = bcrypt.gensalt()
+    """Hash password using bcrypt with configured work factor."""
+    salt = bcrypt.gensalt(rounds=BCRYPT_ROUNDS)
     return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
 
 
@@ -118,35 +128,31 @@ def stakeholder_required(fn):
     return jwt_required_with_role()(fn)
 
 
+# Import database-backed API key manager
+from .api_key_manager import get_api_key_manager
+
 class APIKeyManager:
-    """Manage API keys for programmatic access."""
+    """Manage API keys for programmatic access (deprecated - use DatabaseAPIKeyManager)."""
     
     def __init__(self):
-        self.keys = {}  # In production, use database
+        # Use database-backed manager instead
+        self.db_manager = get_api_key_manager()
     
-    def generate_key(self, user_id: str, name: str, scopes: List[str] = None) -> str:
-        """Generate a new API key."""
-        key = f"mk_{secrets.token_urlsafe(32)}"
-        
-        self.keys[key] = {
-            'user_id': user_id,
-            'name': name,
-            'scopes': scopes or ['read'],
-            'created_at': None,  # Use datetime in production
-            'last_used': None
-        }
-        
-        return key
+    d    def generate_key(self, user_id: str, name: str, scopes: List[str] = None, expires_in_days: Optional[int] = None) -> str:
+        """Generate a new API key (database-backed)."""
+        return self.db_manager.generate_key(user_id, name, scopes, expires_in_days)
     
     def verify_key(self, key: str) -> Optional[dict]:
-        """Verify API key and return associated data."""
-        return self.keys.get(key)
+        """Verify API key and return associated data (database-backed)."""
+        return self.db_manager.verify_key(key)
     
-    def revoke_key(self, key: str):
-        """Revoke an API key."""
-        if key in self.keys:
-            del self.keys[key]
-
+    def revoke_key(self, key_prefix: str, user_id: str) -> bool:
+        """Revoke an API key (database-backed)."""
+        return self.db_manager.revoke_key(key_prefix, user_id)
+    
+    def list_keys(self, user_id: str) -> List[Dict]:
+        """List all API keys for a user (database-backed)."""
+        return self.db_manager.list_keys(user_id)
 
 # Global API key manager
 api_key_manager = APIKeyManager()
