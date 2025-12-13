@@ -18,8 +18,8 @@ from flask_jwt_extended import (
 )
 from datetime import timedelta
 from typing import List, Optional
-import hashlib
 import secrets
+import bcrypt
 
 
 # JWT Configuration
@@ -39,13 +39,14 @@ def init_jwt(app):
 
 
 def hash_password(password: str) -> str:
-    """Hash password using SHA-256."""
-    return hashlib.sha256(password.encode()).hexdigest()
+    """Hash password using bcrypt."""
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
 
 
 def verify_password(password: str, hashed: str) -> bool:
-    """Verify password against hash."""
-    return hash_password(password) == hashed
+    """Verify password against bcrypt hash."""
+    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
 
 
 def create_tokens(identity: str, additional_claims: dict = None):

@@ -16,7 +16,7 @@ class TestEPICalculator:
         """Test harmonic mean calculation."""
         # Equal values
         result = epi_calculator.harmonic_mean(0.8, 0.8)
-        assert result == 0.8
+        assert pytest.approx(result) == 0.8
         
         # Different values
         result = epi_calculator.harmonic_mean(0.9, 0.7)
@@ -30,7 +30,7 @@ class TestEPICalculator:
         """Test balance penalty calculation."""
         # Perfectly balanced
         result = epi_calculator.balance_penalty(0.8, 0.8)
-        assert result == 1.0
+        assert pytest.approx(result) == 1.0
         
         # Imbalanced
         result = epi_calculator.balance_penalty(0.9, 0.5)
@@ -48,7 +48,7 @@ class TestEPICalculator:
         
         # Single violation
         result = epi_calculator.trust_accumulator([0.1])
-        assert result == 0.9
+        assert pytest.approx(result) == 0.9
         
         # Multiple violations
         result = epi_calculator.trust_accumulator([0.1, 0.1])
@@ -56,60 +56,61 @@ class TestEPICalculator:
         
         # Severe violations
         result = epi_calculator.trust_accumulator([0.5, 0.5])
-        assert result == 0.25
+        assert pytest.approx(result) == 0.25
     
     def test_compute_epi_valid(self, epi_calculator, sample_epi_scores):
         """Test EPI computation with valid scores."""
-        epi, valid, trace = epi_calculator.compute_epi(sample_epi_scores['valid'])
+        result = epi_calculator.compute_epi(sample_epi_scores['valid'])
         
-        assert epi >= 0.7
-        assert valid is True
-        assert 'hmean' in trace
-        assert 'balance_penalty' in trace
-        assert 'trust' in trace
-        assert trace['reason'] == 'approved'
+        assert result.epi_score >= 0.7
+        assert result.is_valid == True
+        assert result.harmonic_mean > 0
+        assert result.balance_penalty > 0
+        assert result.trust > 0
+        assert result.reason == 'approved'
     
     def test_compute_epi_invalid(self, epi_calculator, sample_epi_scores):
         """Test EPI computation with invalid scores."""
-        epi, valid, trace = epi_calculator.compute_epi(sample_epi_scores['invalid_low'])
+        result = epi_calculator.compute_epi(sample_epi_scores['invalid_low'])
         
-        assert epi < 0.7
-        assert valid is False
-        assert trace['reason'] == 'rejected'
+        assert result.epi_score < 0.7
+        assert result.is_valid == False
+        assert 'rejected' in result.reason
     
     def test_compute_epi_with_violations(self, epi_calculator, sample_epi_scores):
         """Test EPI computation with violations."""
-        epi, valid, trace = epi_calculator.compute_epi(sample_epi_scores['with_violations'])
+        result = epi_calculator.compute_epi(sample_epi_scores['with_violations'])
         
         # Violations should reduce EPI
-        assert trace['trust'] < 1.0
-        assert epi < 0.9  # Even with high profit/ethics, violations reduce score
+        assert result.trust < 1.0
+        assert result.epi_score < 0.9  # Even with high profit/ethics, violations reduce score
     
     def test_compute_epi_imbalanced(self, epi_calculator, sample_epi_scores):
         """Test EPI computation with imbalanced profit/ethics."""
-        epi, valid, trace = epi_calculator.compute_epi(sample_epi_scores['imbalanced'])
+        result = epi_calculator.compute_epi(sample_epi_scores['imbalanced'])
         
         # Imbalance should apply penalty
-        assert trace['balance_penalty'] < 1.0
+        assert result.balance_penalty < 1.0
     
-    def test_epi_threshold_boundary(self, epi_calculator):
+    def test_epi_threshold_boundary(self):
         """Test EPI at threshold boundary."""
         # Just above threshold
+        calculator = EPICalculator(threshold=0.7)
         scores = EPIScores(profit=0.75, ethics=0.75, violations=[])
-        epi, valid, _ = epi_calculator.compute_epi(scores, threshold=0.7)
-        assert valid is True
+        result = calculator.compute_epi(scores)
+        assert result.is_valid == True
         
         # Just below threshold
         scores = EPIScores(profit=0.65, ethics=0.65, violations=[])
-        epi, valid, _ = epi_calculator.compute_epi(scores, threshold=0.7)
-        assert valid is False
+        result = calculator.compute_epi(scores)
+        assert result.is_valid == False
     
     def test_epi_components_range(self, epi_calculator):
         """Test that all EPI components are in valid range [0, 1]."""
         scores = EPIScores(profit=0.8, ethics=0.7, violations=[0.1])
-        epi, valid, trace = epi_calculator.compute_epi(scores)
+        result = epi_calculator.compute_epi(scores)
         
-        assert 0 <= trace['hmean'] <= 1
-        assert 0 <= trace['balance_penalty'] <= 1
-        assert 0 <= trace['trust'] <= 1
-        assert 0 <= epi <= 1
+        assert 0 <= result.harmonic_mean <= 1
+        assert 0 <= result.balance_penalty <= 1
+        assert 0 <= result.trust <= 1
+        assert 0 <= result.epi_score <= 1
