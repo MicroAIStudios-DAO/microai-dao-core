@@ -1,47 +1,25 @@
 # Security Policy
 
-## Supported Versions
-
-| Version | Supported          |
-| ------- | ------------------ |
-| 0.1.x   | :white_check_mark: |
 
 ## Reporting a Vulnerability
 
-**Do NOT report security vulnerabilities through public GitHub issues.**
 
-Send reports to: **security@microaistudios.io**
+The MicroAI Studios team and community take all security vulnerabilities seriously. We appreciate your efforts to responsibly disclose your findings, and will make every effort to acknowledge your contributions.
 
-Include: description, steps to reproduce, impact assessment, and affected components.
 
-### Response Timeline
-- Initial Response: 48 hours
-- - Status Update: 7 days
-  - - Resolution Target: 30 days (critical)
-   
-    - ## Security Measures
-   
-    - ### Authentication
-    - - JWT Tokens (RS256)
-      - - bcrypt password hashing
-        - - API key management
-          - - Token blacklist for revocation
-           
-            - ### Cryptographic Security
-            - - HMAC-SHA256 decision signing
-              - - SHA-256 reasoning verification
-                - - Secure random generation
-                 
-                  - ### Smart Contract Security
-                  - - Guardian oversight with veto power
-                    - - Emergency pause capability
-                      - - Complete audit trail
-                       
-                        - ## Pending Work
-                       
-                        - - Smart Contract Audit: OpenZeppelin (Q1 2025)
-                          - - Bug Bounty Program: Post-audit
-                           
-                            - ## Contact
-                           
-                            - security@microaistudios.io
+To report a security issue, please email [security@microaistudios.com](mailto:security@microaistudios.com) and include the word "SECURITY" in the subject line. We will work with you to assess and understand the scope of the issue and to fully address any valid vulnerabilities. All security reports will be promptly investigated and addressed by our team.
+
+
+## Scope
+
+
+If you believe you have discovered a security vulnerability in any of our repositories, we encourage you to report it to us as soon as possible. This policy applies to all repositories under the MicroAI Studios organization on GitHub.
+
+
+## Responsible Disclosure
+
+
+We ask that you follow responsible disclosure practices and not publicly disclose the vulnerability until we have had a chance to address it. We will do our best to respond to your report within 24 hours and to keep you informed of our progress.
+
+
+We are grateful for your help in keeping MicroAI Studios and our users safe.
